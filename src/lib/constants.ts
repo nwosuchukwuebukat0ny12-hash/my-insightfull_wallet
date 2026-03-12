@@ -1,4 +1,4 @@
-import { Category, CategoryType, PaymentMethod } from './types';
+import { Category, CategoryType, PaymentMethod, IncomeSource } from './types';
 
 export const CATEGORIES: Category[] = [
   { id: 'food', name: 'Food & Dining', icon: '🍔', color: 'category-food' },
@@ -34,3 +34,11 @@ export const getCategoryById = (id: CategoryType): Category => {
 };
 
 export const DEFAULT_CURRENCY: CurrencyCode = 'USD';
+
+export const INCOME_SOURCES: { id: IncomeSource; name: string; icon: string }[] = [
+  { id: 'salary', name: 'Salary', icon: '💼' },
+  { id: 'freelance', name: 'Freelance', icon: '💻' },
+  { id: 'gift', name: 'Gift', icon: '🎁' },
+  { id: 'investment', name: 'Investment', icon: '📈' },
+  { id: 'other', name: 'Other', icon: '💵' },
+];

@@ -6,6 +6,8 @@ import { useExpenses } from '@/context/ExpenseContext';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 interface ExpenseFormProps {
   expense?: Expense | null;
@@ -45,7 +47,7 @@ export const ExpenseForm = ({ expense, onClose, onNavigateToSettings }: ExpenseF
 
     const amount = parseFloat(formData.amount);
     if (!formData.name.trim() || isNaN(amount) || amount <= 0) {
-      alert('Please fill in all required fields correctly.');
+      toast.error('Please fill in all required fields correctly.');
       return;
     }
 
@@ -77,53 +79,36 @@ export const ExpenseForm = ({ expense, onClose, onNavigateToSettings }: ExpenseF
   // Show friendly message if no budget is set (only for new expenses, not editing)
   if (!hasBudget && !isEditing) {
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 animate-fade-in">
-        <div className="bg-card w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-auto animate-slide-up">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
-            <h2 className="text-lg font-semibold font-display">Set Your Budget First</h2>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+      <Dialog open={true} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Budget Not Set Yet! 🎯</DialogTitle>
+            <DialogDescription>
+              Before you start tracking expenses, let's set up your monthly budget.
+              This helps you stay on top of your spending and reach your financial goals.
+            </DialogDescription>
+          </DialogHeader>
 
-          {/* Message Content */}
-          <div className="p-6 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+          <div className="flex justify-center py-4">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
               <AlertCircle className="w-8 h-8 text-primary" />
             </div>
-            
-            <div className="space-y-2">
-              <h3 className="text-xl font-semibold font-display">
-                Budget Not Set Yet! 🎯
-              </h3>
-              <p className="text-muted-foreground">
-                Before you start tracking expenses, let's set up your monthly budget. 
-                This helps you stay on top of your spending and reach your financial goals.
-              </p>
-            </div>
-
-            <div className="pt-4 space-y-3">
-              <Button 
-                onClick={handleGoToSettings}
-                className="w-full gap-2"
-              >
-                <Settings className="w-4 h-4" />
-                Go to Settings
-              </Button>
-              <button
-                onClick={onClose}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                I'll do it later
-              </button>
-            </div>
           </div>
-        </div>
-      </div>
+
+          <DialogFooter className="flex-col sm:flex-col gap-3">
+            <Button onClick={handleGoToSettings} className="w-full gap-2">
+              <Settings className="w-4 h-4" />
+              Go to Settings
+            </Button>
+            <button
+              onClick={onClose}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-center"
+            >
+              I'll do it later
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     );
   }
 
@@ -144,13 +129,14 @@ export const ExpenseForm = ({ expense, onClose, onNavigateToSettings }: ExpenseF
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 pb-8 sm:pb-4 space-y-4">
           {/* Amount */}
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+            <label htmlFor="expense-amount" className="block text-sm font-medium text-muted-foreground mb-1.5">
               Amount *
             </label>
             <input
+              id="expense-amount"
               type="number"
               step="0.01"
               min="0"
@@ -164,10 +150,11 @@ export const ExpenseForm = ({ expense, onClose, onNavigateToSettings }: ExpenseF
 
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+            <label htmlFor="expense-desc" className="block text-sm font-medium text-muted-foreground mb-1.5">
               Description *
             </label>
             <input
+              id="expense-desc"
               type="text"
               placeholder="What did you spend on?"
               value={formData.name}
@@ -178,10 +165,10 @@ export const ExpenseForm = ({ expense, onClose, onNavigateToSettings }: ExpenseF
           </div>
 
           {/* Category */}
-          <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+          <fieldset>
+            <legend className="block text-sm font-medium text-muted-foreground mb-1.5 focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent">
               Category
-            </label>
+            </legend>
             <div className="grid grid-cols-5 gap-2">
               {CATEGORIES.map((cat) => (
                 <button
@@ -202,14 +189,15 @@ export const ExpenseForm = ({ expense, onClose, onNavigateToSettings }: ExpenseF
                 </button>
               ))}
             </div>
-          </div>
+          </fieldset>
 
           {/* Date */}
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+            <label htmlFor="expense-date" className="block text-sm font-medium text-muted-foreground mb-1.5">
               Date
             </label>
             <input
+              id="expense-date"
               type="date"
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -218,10 +206,10 @@ export const ExpenseForm = ({ expense, onClose, onNavigateToSettings }: ExpenseF
           </div>
 
           {/* Payment Method */}
-          <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+          <fieldset>
+            <legend className="block text-sm font-medium text-muted-foreground mb-1.5 focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent">
               Payment Method
-            </label>
+            </legend>
             <div className="flex flex-wrap gap-2">
               {PAYMENT_METHODS.map((method) => (
                 <button
@@ -240,14 +228,15 @@ export const ExpenseForm = ({ expense, onClose, onNavigateToSettings }: ExpenseF
                 </button>
               ))}
             </div>
-          </div>
+          </fieldset>
 
           {/* Note */}
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+            <label htmlFor="expense-note" className="block text-sm font-medium text-muted-foreground mb-1.5">
               Note (optional)
             </label>
             <textarea
+              id="expense-note"
               placeholder="Add a note..."
               value={formData.note}
               onChange={(e) => setFormData({ ...formData, note: e.target.value })}

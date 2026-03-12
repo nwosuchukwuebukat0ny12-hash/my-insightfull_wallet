@@ -24,7 +24,7 @@ export const SpendingTrend = () => {
     );
   }
 
-  const chartData = dailySpending.map((item) => ({
+  const chartData = dailySpending.slice(-7).map((item) => ({
     date: formatDateShort(item.date),
     amount: item.amount,
   }));
@@ -46,7 +46,7 @@ export const SpendingTrend = () => {
       <h3 className="text-lg font-semibold font-display mb-4">Daily Spending Trend</h3>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
@@ -62,6 +62,7 @@ export const SpendingTrend = () => {
             <YAxis
               axisLine={false}
               tickLine={false}
+              width={50}
               tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
               tickFormatter={(value) => {
                 const currencyInfo = CURRENCIES.find(c => c.code === currency);

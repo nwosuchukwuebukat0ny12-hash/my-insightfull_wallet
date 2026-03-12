@@ -2,9 +2,15 @@ import { useExpenses } from '@/context/ExpenseContext';
 import { CURRENCIES, CurrencyCode } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { ProfileSettings } from './ProfileSettings';
+import { useTheme } from '@/hooks/useTheme';
+import { useState } from 'react';
+import { Sun, Moon, Monitor } from 'lucide-react';
 
 export const SettingsView = () => {
   const { currency, setCurrency, budget, setBudget, expenses } = useExpenses();
+  const { theme, setTheme } = useTheme();
+  const [localBudget, setLocalBudget] = useState(budget?.amount?.toString() || '');
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const handleExportCSV = () => {
     if (expenses.length === 0) {
@@ -32,7 +38,7 @@ export const SettingsView = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-20 lg:pb-0">
       <div>
         <h2 className="text-2xl font-bold font-display mb-1">Settings</h2>
         <p className="text-muted-foreground">Customize your expense tracker</p>
@@ -40,6 +46,32 @@ export const SettingsView = () => {
 
       {/* Profile Settings */}
       <ProfileSettings />
+
+      {/* Appearance */}
+      <div className="card-elevated p-6">
+        <h3 className="text-lg font-semibold font-display mb-4">Appearance</h3>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { id: 'light' as const, label: 'Light', icon: Sun },
+            { id: 'dark' as const, label: 'Dark', icon: Moon },
+            { id: 'system' as const, label: 'System', icon: Monitor },
+          ].map((option) => (
+            <button
+              key={option.id}
+              onClick={() => setTheme(option.id)}
+              className={cn(
+                'p-4 rounded-xl border-2 text-center transition-all flex flex-col items-center gap-2',
+                theme === option.id
+                  ? 'border-primary bg-primary/10'
+                  : 'border-transparent bg-muted hover:border-border'
+              )}
+            >
+              <option.icon className="w-5 h-5" />
+              <span className="text-sm font-medium">{option.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Currency Selection */}
       <div className="card-elevated p-6">
@@ -73,15 +105,27 @@ export const SettingsView = () => {
             step="100"
             placeholder="Enter budget amount"
             defaultValue={budget?.amount || ''}
-            onChange={(e) => {
-              const value = parseFloat(e.target.value);
-              if (!isNaN(value) && value >= 0) {
-                setBudget(value);
-              }
-            }}
+            onChange={(e) => setLocalBudget(e.target.value)}
             className="input-field flex-1"
           />
-          <span className="text-muted-foreground font-medium">/ month</span>
+          <span className="text-muted-foreground font-medium hidden sm:inline">/ month</span>
+          <button
+            onClick={() => {
+              const value = parseFloat(localBudget);
+              if (!isNaN(value) && value >= 0) {
+                setBudget(value);
+                setSaveSuccess(true);
+                setTimeout(() => setSaveSuccess(false), 2000);
+              }
+            }}
+            className={cn(
+              "btn-primary transition-all",
+              saveSuccess && "bg-green-500 hover:bg-green-600 text-white border-green-500"
+            )}
+            disabled={localBudget === '' && !budget}
+          >
+            {saveSuccess ? 'Saved!' : 'Save Budget'}
+          </button>
         </div>
         <p className="text-sm text-muted-foreground mt-2">
           Set a budget to track your spending and get alerts when you're close to the limit.

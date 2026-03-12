@@ -15,7 +15,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null; data?: any }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
@@ -30,8 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
-    // Using type assertion since types may not be regenerated yet
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('user_id', userId)
@@ -41,7 +40,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error fetching profile:', error);
       return null;
     }
-    return data as Profile | null;
+
+    if (!data) return null;
+
+    // Map the database snake_case to the frontend camelCase interface
+    const formattedProfile: Profile = {
+      id: data.id,
+      user_id: data.user_id,
+      full_name: data.full_name,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+    };
+
+    return formattedProfile;
   };
 
   useEffect(() => {
@@ -50,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         // Defer profile fetch with setTimeout to prevent deadlock
         if (session?.user) {
           setTimeout(() => {
@@ -76,9 +87,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
+    const redirectUrl = `${window.location.origin}/auth`;
+
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -90,10 +101,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     if (error) {
-      return { error };
+      return { error, data: null };
     }
 
-    return { error: null };
+    return { error: null, data };
   };
 
   const signIn = async (email: string, password: string) => {
@@ -115,7 +126,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const resetPassword = async (email: string) => {
     // Use the base origin URL - Supabase will handle the token via hash fragment
     const redirectUrl = `${window.location.origin}/auth`;
-    
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
     });

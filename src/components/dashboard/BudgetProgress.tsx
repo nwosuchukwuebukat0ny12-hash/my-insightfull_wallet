@@ -1,25 +1,26 @@
 import { useExpenses } from '@/context/ExpenseContext';
 import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 export const BudgetProgress = () => {
   const { expenses, budget, currency, setBudget } = useExpenses();
-  
+
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
-  
+
   // Filter expenses for current month
   const monthExpenses = expenses.filter((expense) => {
     const expenseDate = new Date(expense.date);
     return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
   });
-  
+
   const totalSpent = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
   const budgetAmount = budget?.amount || 0;
   const remaining = budgetAmount - totalSpent;
   const percentage = budgetAmount > 0 ? Math.min(100, (totalSpent / budgetAmount) * 100) : 0;
-  
+
   const isOverBudget = remaining < 0;
   const isNearLimit = percentage >= 80 && percentage < 100;
 
@@ -36,7 +37,10 @@ export const BudgetProgress = () => {
     return `You have ${formatCurrency(remaining, currency)} left to spend`;
   };
 
-  if (budgetAmount === 0) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editAmount, setEditAmount] = useState(budgetAmount.toString());
+
+  if (budgetAmount === 0 && !isEditing) {
     return (
       <div className="glass-card p-6 animate-slide-up stagger-1">
         <div className="flex items-center justify-between mb-4">
@@ -48,16 +52,67 @@ export const BudgetProgress = () => {
           </div>
           <p className="text-muted-foreground mb-4">No budget set for this month</p>
           <button
-            onClick={() => {
-              const amount = prompt('Enter your monthly budget:');
-              if (amount && !isNaN(Number(amount))) {
-                setBudget(Number(amount));
-              }
-            }}
+            onClick={() => setIsEditing(true)}
             className="btn-primary"
           >
             Set Budget
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isEditing) {
+    return (
+      <div className="glass-card p-6 animate-slide-up stagger-1">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold font-display">Set Monthly Budget</h3>
+          <button
+            onClick={() => setIsEditing(false)}
+            className="btn-ghost text-sm text-muted-foreground hover:text-foreground"
+          >
+            Cancel
+          </button>
+        </div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                {currency}
+              </span>
+              <input
+                type="number"
+                min="0"
+                step="10"
+                value={editAmount}
+                onChange={(e) => setEditAmount(e.target.value)}
+                className="input-field pl-8 w-full"
+                placeholder="0.00"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const amount = parseFloat(editAmount);
+                    if (!isNaN(amount) && amount >= 0) {
+                      setBudget(amount);
+                      setIsEditing(false);
+                    }
+                  }
+                }}
+              />
+            </div>
+            <button
+              onClick={() => {
+                const amount = parseFloat(editAmount);
+                if (!isNaN(amount) && amount >= 0) {
+                  setBudget(amount);
+                  setIsEditing(false);
+                }
+              }}
+              className="btn-primary whitespace-nowrap"
+            >
+              Save
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -69,10 +124,8 @@ export const BudgetProgress = () => {
         <h3 className="text-lg font-semibold font-display">Monthly Budget</h3>
         <button
           onClick={() => {
-            const amount = prompt('Enter your monthly budget:', String(budgetAmount));
-            if (amount && !isNaN(Number(amount))) {
-              setBudget(Number(amount));
-            }
+            setEditAmount(budgetAmount.toString());
+            setIsEditing(true);
           }}
           className="btn-ghost text-sm"
         >
@@ -86,22 +139,19 @@ export const BudgetProgress = () => {
             <p className="text-sm text-muted-foreground">Spent</p>
             <p className="text-2xl font-bold font-display">{formatCurrency(totalSpent, currency)}</p>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground">Budget</p>
-            <p className="text-lg font-semibold">{formatCurrency(budgetAmount, currency)}</p>
-          </div>
+
         </div>
 
         <div className="budget-progress">
           <div
             className={cn('h-full rounded-full transition-all duration-700 ease-out', getProgressColor())}
-            style={{ 
+            style={{
               width: `${percentage}%`,
-              boxShadow: isOverBudget 
-                ? '0 0 12px hsl(var(--destructive) / 0.5)' 
-                : isNearLimit 
-                ? '0 0 12px hsl(var(--warning) / 0.5)'
-                : '0 0 12px hsl(var(--primary) / 0.5)'
+              boxShadow: isOverBudget
+                ? '0 0 12px hsl(var(--destructive) / 0.5)'
+                : isNearLimit
+                  ? '0 0 12px hsl(var(--warning) / 0.5)'
+                  : '0 0 12px hsl(var(--primary) / 0.5)'
             }}
           />
         </div>

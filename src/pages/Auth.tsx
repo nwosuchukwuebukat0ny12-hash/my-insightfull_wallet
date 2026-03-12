@@ -38,17 +38,17 @@ const Auth = () => {
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
       const type = hashParams.get('type');
-      
+
       if (accessToken && type === 'recovery') {
         setMode('reset');
         setIsRecoverySession(true);
-        
+
         // Set the session from the recovery token
         const { error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: hashParams.get('refresh_token') || '',
         });
-        
+
         if (error) {
           toast({
             title: 'Recovery link expired',
@@ -57,7 +57,15 @@ const Auth = () => {
           });
           setMode('forgot');
         }
-        
+
+        // Clean up the URL hash
+        window.history.replaceState(null, '', window.location.pathname);
+      } else if (accessToken && type === 'signup') {
+        toast({
+          title: 'Email confirmed! 🎉',
+          description: 'Your account has been successfully verified. Welcome to SpendWise!',
+        });
+
         // Clean up the URL hash
         window.history.replaceState(null, '', window.location.pathname);
       }
@@ -101,7 +109,7 @@ const Auth = () => {
     if (mode !== 'reset') {
       const emailResult = emailSchema.safeParse(email);
       if (!emailResult.success) {
-        newErrors.email = emailResult.error.errors[0].message;
+        newErrors.email = emailResult.error.issues[0].message;
       }
     }
 
@@ -109,14 +117,14 @@ const Auth = () => {
     if (mode !== 'forgot') {
       const passwordResult = passwordSchema.safeParse(password);
       if (!passwordResult.success) {
-        newErrors.password = passwordResult.error.errors[0].message;
+        newErrors.password = passwordResult.error.issues[0].message;
       }
     }
 
     if (mode === 'signup') {
       const nameResult = nameSchema.safeParse(fullName);
       if (!nameResult.success) {
-        newErrors.name = nameResult.error.errors[0].message;
+        newErrors.name = nameResult.error.issues[0].message;
       }
     }
 
@@ -126,16 +134,32 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setLoading(true);
 
     try {
       if (mode === 'login') {
         const { error } = await signIn(email, password);
         if (error) {
-          if (error.message.includes('Invalid login credentials')) {
+          // Generally handle authentication errors with standard copy
+          const authErr = error as unknown as { message?: string; status?: number; code?: string };
+
+          // If the user tries to login but hasn't confirmed their email yet
+          if (authErr.message?.toLowerCase().includes('email not confirmed')) {
+            toast({
+              title: 'Email not confirmed',
+              description: 'Please check your inbox for a confirmation link before signing in.',
+              variant: 'destructive',
+            });
+            return;
+          }
+
+          const isInvalidCredentials =
+            authErr.status === 400 || authErr.code === 'invalid_credentials';
+
+          if (isInvalidCredentials) {
             toast({
               title: 'Login failed',
               description: 'Invalid email or password. Please try again.',
@@ -156,9 +180,13 @@ const Auth = () => {
           navigate('/dashboard');
         }
       } else if (mode === 'signup') {
-        const { error } = await signUp(email, password, fullName);
+        const { error, data } = await signUp(email, password, fullName);
         if (error) {
-          if (error.message.includes('already registered')) {
+          const authErr = error as unknown as { message?: string; status?: number; code?: string };
+          const isAlreadyRegistered =
+            authErr.status === 422 || authErr.code === 'user_already_exists';
+
+          if (isAlreadyRegistered) {
             toast({
               title: 'Account exists',
               description: 'This email is already registered. Please login instead.',
@@ -172,6 +200,16 @@ const Auth = () => {
             });
           }
         } else {
+          // Check if email confirmation is required (session will be null if they need to verify)
+          if (data && data.user && !data.session) {
+            toast({
+              title: 'Check your email!',
+              description: 'We sent you a confirmation link. Please click it to verify your account.',
+            });
+            setMode('login'); // Switch to login so they can sign in after clicking the link
+            return; // Don't navigate to dashboard
+          }
+
           toast({
             title: 'Account created!',
             description: 'Welcome to SpendWise. Start tracking your expenses!',

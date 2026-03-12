@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
 @layer base {
   :root {
@@ -129,47 +129,47 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   }
 }
 
 @layer components {
+
   /* Glass morphism cards */
   .glass-card {
     @apply rounded-2xl border border-white/20;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--card) / 0.8) 0%,
-      hsl(var(--card) / 0.6) 100%
-    );
+    background: linear-gradient(135deg,
+        hsl(var(--card) / 0.8) 0%,
+        hsl(var(--card) / 0.6) 100%);
     backdrop-filter: blur(20px);
-    box-shadow: 
+    box-shadow:
       0 8px 32px hsl(var(--foreground) / 0.08),
       inset 0 1px 0 hsl(255 255 255 / 0.1);
   }
 
   .glass-card-accent {
     @apply rounded-2xl border border-primary/20;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary) / 0.1) 0%,
-      hsl(var(--primary) / 0.05) 100%
-    );
+    background: linear-gradient(135deg,
+        hsl(var(--primary) / 0.1) 0%,
+        hsl(var(--primary) / 0.05) 100%);
     backdrop-filter: blur(20px);
-    box-shadow: 
+    box-shadow:
       0 8px 32px hsl(var(--primary) / 0.1),
       inset 0 1px 0 hsl(255 255 255 / 0.1);
   }
 
   .bubble-card {
     @apply rounded-3xl border border-white/10;
-    background: linear-gradient(
-      145deg,
-      hsl(var(--card)) 0%,
-      hsl(var(--muted) / 0.5) 100%
-    );
-    box-shadow: 
+    background: linear-gradient(145deg,
+        hsl(var(--card)) 0%,
+        hsl(var(--muted) / 0.5) 100%);
+    box-shadow:
       0 20px 40px hsl(var(--foreground) / 0.06),
       0 4px 12px hsl(var(--foreground) / 0.04),
       inset 0 2px 0 hsl(255 255 255 / 0.05);
@@ -187,21 +187,19 @@
 
   .stat-card {
     @apply rounded-2xl p-5 border transition-all duration-300;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--card) / 0.9) 0%,
-      hsl(var(--card) / 0.7) 100%
-    );
+    background: linear-gradient(135deg,
+        hsl(var(--card) / 0.9) 0%,
+        hsl(var(--card) / 0.7) 100%);
     backdrop-filter: blur(12px);
     border-color: hsl(var(--border) / 0.5);
-    box-shadow: 
+    box-shadow:
       0 4px 20px hsl(var(--foreground) / 0.04),
       inset 0 1px 0 hsl(255 255 255 / 0.08);
   }
 
   .stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 
+    box-shadow:
       0 12px 32px hsl(var(--foreground) / 0.08),
       inset 0 1px 0 hsl(255 255 255 / 0.1);
     border-color: hsl(var(--primary) / 0.3);
@@ -209,41 +207,35 @@
 
   .stat-card-primary {
     @apply rounded-2xl p-5 border transition-all duration-300;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary) / 0.15) 0%,
-      hsl(var(--primary) / 0.08) 100%
-    );
+    background: linear-gradient(135deg,
+        hsl(var(--primary) / 0.15) 0%,
+        hsl(var(--primary) / 0.08) 100%);
     backdrop-filter: blur(12px);
     border-color: hsl(var(--primary) / 0.3);
-    box-shadow: 
+    box-shadow:
       0 4px 24px hsl(var(--primary) / 0.15),
       inset 0 1px 0 hsl(255 255 255 / 0.1);
   }
 
   .stat-card-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 
+    box-shadow:
       0 16px 40px hsl(var(--primary) / 0.2),
       inset 0 1px 0 hsl(255 255 255 / 0.15);
   }
 
   .budget-progress {
     @apply h-3 rounded-full overflow-hidden;
-    background: linear-gradient(
-      90deg,
-      hsl(var(--muted)) 0%,
-      hsl(var(--muted) / 0.7) 100%
-    );
+    background: linear-gradient(90deg,
+        hsl(var(--muted)) 0%,
+        hsl(var(--muted) / 0.7) 100%);
   }
 
   .budget-progress-bar {
     @apply h-full rounded-full transition-all duration-700 ease-out;
-    background: linear-gradient(
-      90deg,
-      hsl(var(--primary)) 0%,
-      hsl(160 90% 50%) 100%
-    );
+    background: linear-gradient(90deg,
+        hsl(var(--primary)) 0%,
+        hsl(160 90% 50%) 100%);
     box-shadow: 0 0 12px hsl(var(--primary) / 0.5);
   }
 
@@ -254,36 +246,32 @@
 
   .expense-row {
     @apply flex items-center justify-between p-4 rounded-2xl border border-transparent transition-all duration-200;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--card) / 0.8) 0%,
-      hsl(var(--card) / 0.6) 100%
-    );
+    background: linear-gradient(135deg,
+        hsl(var(--card) / 0.8) 0%,
+        hsl(var(--card) / 0.6) 100%);
   }
 
   .expense-row:hover {
     border-color: hsl(var(--border) / 0.5);
     transform: translateX(4px);
-    box-shadow: 
+    box-shadow:
       0 4px 16px hsl(var(--foreground) / 0.05),
       inset 0 1px 0 hsl(255 255 255 / 0.05);
   }
 
   .fab-button {
-    @apply fixed bottom-6 right-6 w-16 h-16 rounded-full text-primary-foreground flex items-center justify-center transition-all duration-300 z-50;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary)) 0%,
-      hsl(160 90% 35%) 100%
-    );
-    box-shadow: 
+    @apply fixed bottom-24 lg:bottom-6 right-6 w-16 h-16 rounded-full text-primary-foreground flex items-center justify-center transition-all duration-300 z-50;
+    background: linear-gradient(135deg,
+        hsl(var(--primary)) 0%,
+        hsl(160 90% 35%) 100%);
+    box-shadow:
       0 8px 24px hsl(var(--primary) / 0.4),
       0 4px 8px hsl(var(--primary) / 0.2);
   }
 
   .fab-button:hover {
     transform: scale(1.08) translateY(-2px);
-    box-shadow: 
+    box-shadow:
       0 12px 32px hsl(var(--primary) / 0.5),
       0 6px 12px hsl(var(--primary) / 0.3);
   }
@@ -300,11 +288,9 @@
 
   .btn-primary {
     @apply px-6 py-3 rounded-xl text-primary-foreground font-semibold transition-all duration-300;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary)) 0%,
-      hsl(160 80% 38%) 100%
-    );
+    background: linear-gradient(135deg,
+        hsl(var(--primary)) 0%,
+        hsl(160 80% 38%) 100%);
     box-shadow: 0 4px 14px hsl(var(--primary) / 0.35);
   }
 
@@ -319,11 +305,9 @@
 
   .btn-secondary {
     @apply px-6 py-3 rounded-xl font-semibold transition-all duration-200;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--secondary)) 0%,
-      hsl(var(--secondary) / 0.8) 100%
-    );
+    background: linear-gradient(135deg,
+        hsl(var(--secondary)) 0%,
+        hsl(var(--secondary) / 0.8) 100%);
     color: hsl(var(--secondary-foreground));
   }
 
@@ -342,11 +326,9 @@
 
   .nav-item-active {
     @apply flex items-center gap-3 px-4 py-3 rounded-xl font-semibold;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary) / 0.15) 0%,
-      hsl(var(--primary) / 0.08) 100%
-    );
+    background: linear-gradient(135deg,
+        hsl(var(--primary) / 0.15) 0%,
+        hsl(var(--primary) / 0.08) 100%);
     color: hsl(var(--primary));
     box-shadow: inset 0 1px 0 hsl(255 255 255 / 0.1);
   }
@@ -358,34 +340,28 @@
 
   .gradient-text {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(
-      135deg,
-      hsl(var(--primary)) 0%,
-      hsl(160 90% 50%) 50%,
-      hsl(var(--primary)) 100%
-    );
+    background-image: linear-gradient(135deg,
+        hsl(var(--primary)) 0%,
+        hsl(160 90% 50%) 50%,
+        hsl(var(--primary)) 100%);
   }
 
   .skeleton {
     @apply animate-pulse rounded-xl;
-    background: linear-gradient(
-      90deg,
-      hsl(var(--muted)) 0%,
-      hsl(var(--muted) / 0.5) 50%,
-      hsl(var(--muted)) 100%
-    );
+    background: linear-gradient(90deg,
+        hsl(var(--muted)) 0%,
+        hsl(var(--muted) / 0.5) 50%,
+        hsl(var(--muted)) 100%);
   }
 
   /* Chart container with glass effect */
   .chart-container {
     @apply rounded-2xl p-6 border border-white/10;
-    background: linear-gradient(
-      145deg,
-      hsl(var(--card) / 0.9) 0%,
-      hsl(var(--card) / 0.7) 100%
-    );
+    background: linear-gradient(145deg,
+        hsl(var(--card) / 0.9) 0%,
+        hsl(var(--card) / 0.7) 100%);
     backdrop-filter: blur(12px);
-    box-shadow: 
+    box-shadow:
       0 8px 32px hsl(var(--foreground) / 0.06),
       inset 0 1px 0 hsl(255 255 255 / 0.08);
   }
@@ -396,6 +372,7 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -420,49 +397,78 @@
     animation: glow 2s ease-in-out infinite alternate;
   }
 
-  .stagger-1 { animation-delay: 0.05s; }
-  .stagger-2 { animation-delay: 0.1s; }
-  .stagger-3 { animation-delay: 0.15s; }
-  .stagger-4 { animation-delay: 0.2s; }
-  .stagger-5 { animation-delay: 0.25s; }
+  .stagger-1 {
+    animation-delay: 0.05s;
+  }
+
+  .stagger-2 {
+    animation-delay: 0.1s;
+  }
+
+  .stagger-3 {
+    animation-delay: 0.15s;
+  }
+
+  .stagger-4 {
+    animation-delay: 0.2s;
+  }
+
+  .stagger-5 {
+    animation-delay: 0.25s;
+  }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes slideUp {
-    from { 
+    from {
       opacity: 0;
       transform: translateY(20px);
     }
-    to { 
+
+    to {
       opacity: 1;
       transform: translateY(0);
     }
   }
 
   @keyframes scaleIn {
-    from { 
+    from {
       opacity: 0;
       transform: scale(0.9);
     }
-    to { 
+
+    to {
       opacity: 1;
       transform: scale(1);
     }
   }
 
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-6px);
+    }
   }
 
   @keyframes glow {
-    from { 
+    from {
       box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
     }
-    to { 
+
+    to {
       box-shadow: 0 0 30px hsl(var(--primary) / 0.5);
     }
   }

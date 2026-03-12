@@ -57,3 +57,15 @@ export interface DailySpending {
   date: string;
   amount: number;
 }
+
+export type IncomeSource = 'salary' | 'freelance' | 'gift' | 'investment' | 'other' | (string & {});
+
+export interface Income {
+  id: string;
+  name: string;
+  amount: number;
+  source: IncomeSource;
+  date: string;
+  note?: string;
+  createdAt: string;
+}

@@ -1,7 +1,8 @@
-import { TrendingUp, TrendingDown, Wallet, Calendar, PiggyBank, Target } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Calendar, PiggyBank, DollarSign } from 'lucide-react';
 import { useExpenses } from '@/context/ExpenseContext';
 import { formatCurrency, filterExpensesByPeriod, calculateTotal, getPreviousMonthSpending, calculateChangePercentage } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { parseISO, isThisMonth } from 'date-fns';
 
 const StatCard = ({
   title,
@@ -65,7 +66,7 @@ const StatCard = ({
 };
 
 export const DashboardStats = () => {
-  const { expenses, budget, currency } = useExpenses();
+  const { expenses, income, budget, currency } = useExpenses();
 
   const monthExpenses = filterExpensesByPeriod(expenses, 'month');
   const todayExpenses = filterExpensesByPeriod(expenses, 'today');
@@ -76,10 +77,17 @@ export const DashboardStats = () => {
   
   const changePercentage = calculateChangePercentage(totalThisMonth, previousMonthTotal);
   const trend = changePercentage > 0 ? 'up' : changePercentage < 0 ? 'down' : 'neutral';
-  
-  const budgetAmount = budget?.amount || 0;
-  const remainingBudget = budgetAmount - totalThisMonth;
-  const budgetPercentage = budgetAmount > 0 ? (totalThisMonth / budgetAmount) * 100 : 0;
+
+  // Calculate monthly income
+  const monthIncome = income.filter((i) => {
+    try {
+      return isThisMonth(parseISO(i.date));
+    } catch {
+      return false;
+    }
+  });
+  const totalIncomeThisMonth = monthIncome.reduce((sum, i) => sum + i.amount, 0);
+  const netBalance = totalIncomeThisMonth - totalThisMonth;
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -100,17 +108,19 @@ export const DashboardStats = () => {
         className="stagger-2"
       />
       <StatCard
-        title="Budget Left"
-        value={budgetAmount > 0 ? formatCurrency(Math.max(0, remainingBudget), currency) : 'Not set'}
-        icon={PiggyBank}
-        variant={budgetPercentage > 90 ? 'warning' : budgetPercentage > 0 ? 'success' : 'default'}
+        title="Total Income"
+        value={formatCurrency(totalIncomeThisMonth, currency)}
+        icon={DollarSign}
+        variant="success"
         className="stagger-3"
       />
       <StatCard
-        title="Budget Used"
-        value={budgetAmount > 0 ? `${Math.min(100, budgetPercentage).toFixed(0)}%` : '—'}
-        icon={Target}
-        variant={budgetPercentage > 90 ? 'warning' : 'default'}
+        title="Net Balance"
+        value={formatCurrency(Math.abs(netBalance), currency)}
+        icon={PiggyBank}
+        trend={netBalance >= 0 ? 'down' : 'up'}
+        trendValue={netBalance >= 0 ? 'Saving' : 'Over'}
+        variant={netBalance >= 0 ? 'success' : 'warning'}
         className="stagger-4"
       />
     </div>

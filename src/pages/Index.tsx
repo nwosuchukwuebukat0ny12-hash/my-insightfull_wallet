@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, DollarSign } from 'lucide-react';
 import { ExpenseProvider } from '@/context/ExpenseContext';
 import { Layout } from '@/components/layout/Layout';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
@@ -8,15 +8,17 @@ import { SpendingChart } from '@/components/dashboard/SpendingChart';
 import { SpendingTrend } from '@/components/dashboard/SpendingTrend';
 import { WeeklySpendingCard } from '@/components/dashboard/WeeklySpendingCard';
 import { WeeklyTrendChart } from '@/components/dashboard/WeeklyTrendChart';
+import { IncomeExpenseChart } from '@/components/dashboard/IncomeExpenseChart';
 import { ExpenseList } from '@/components/expenses/ExpenseList';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
+import { IncomeForm } from '@/components/income/IncomeForm';
 import { SettingsView } from '@/components/settings/SettingsView';
 import { Expense } from '@/lib/types';
 import { format } from 'date-fns';
 
 type ViewType = 'dashboard' | 'expenses' | 'settings';
 
-const DashboardView = ({ onAddExpense }: { onAddExpense: () => void }) => {
+const DashboardView = ({ onAddExpense, onAddIncome }: { onAddExpense: () => void; onAddIncome: () => void }) => {
   const currentMonth = format(new Date(), 'MMMM yyyy');
 
   return (
@@ -26,10 +28,16 @@ const DashboardView = ({ onAddExpense }: { onAddExpense: () => void }) => {
           <h2 className="text-2xl font-bold font-display mb-1">Dashboard</h2>
           <p className="text-muted-foreground">{currentMonth}</p>
         </div>
-        <button onClick={onAddExpense} className="btn-primary hidden sm:flex items-center gap-2">
-          <Plus className="w-5 h-5" />
-          Add Expense
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={onAddIncome} className="btn-secondary flex items-center gap-2">
+            <DollarSign className="w-5 h-5" />
+            <span className="hidden sm:inline">Add Income</span>
+          </button>
+          <button onClick={onAddExpense} className="btn-primary flex items-center gap-2">
+            <Plus className="w-5 h-5" />
+            <span className="hidden sm:inline">Add Expense</span>
+          </button>
+        </div>
       </div>
 
       <DashboardStats />
@@ -46,15 +54,22 @@ const DashboardView = ({ onAddExpense }: { onAddExpense: () => void }) => {
         <SpendingTrend />
         <WeeklyTrendChart />
       </div>
+
+      {/* Income vs Expenses */}
+      <div className="grid md:grid-cols-1 gap-6">
+        <IncomeExpenseChart />
+      </div>
     </div>
   );
 };
 
-const ExpensesView = ({ 
-  onAddExpense, 
-  onEditExpense 
-}: { 
-  onAddExpense: () => void; 
+const ExpensesView = ({
+  onAddExpense,
+  onAddIncome,
+  onEditExpense
+}: {
+  onAddExpense: () => void;
+  onAddIncome: () => void;
   onEditExpense: (expense: Expense) => void;
 }) => {
   return (
@@ -64,10 +79,16 @@ const ExpensesView = ({
           <h2 className="text-2xl font-bold font-display mb-1">Expenses</h2>
           <p className="text-muted-foreground">Manage your spending</p>
         </div>
-        <button onClick={onAddExpense} className="btn-primary hidden sm:flex items-center gap-2">
-          <Plus className="w-5 h-5" />
-          Add Expense
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={onAddIncome} className="btn-secondary flex items-center gap-2">
+            <DollarSign className="w-5 h-5" />
+            <span className="hidden sm:inline">Add Income</span>
+          </button>
+          <button onClick={onAddExpense} className="btn-primary flex items-center gap-2">
+            <Plus className="w-5 h-5" />
+            <span className="hidden sm:inline">Add Expense</span>
+          </button>
+        </div>
       </div>
 
       <ExpenseList onEditExpense={onEditExpense} />
@@ -78,6 +99,7 @@ const ExpensesView = ({
 const AppContent = () => {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [showForm, setShowForm] = useState(false);
+  const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
   const handleAddExpense = () => {
@@ -101,9 +123,9 @@ const AppContent = () => {
 
   return (
     <Layout currentView={currentView} onViewChange={setCurrentView}>
-      {currentView === 'dashboard' && <DashboardView onAddExpense={handleAddExpense} />}
+      {currentView === 'dashboard' && <DashboardView onAddExpense={handleAddExpense} onAddIncome={() => setShowIncomeForm(true)} />}
       {currentView === 'expenses' && (
-        <ExpensesView onAddExpense={handleAddExpense} onEditExpense={handleEditExpense} />
+        <ExpensesView onAddExpense={handleAddExpense} onAddIncome={() => setShowIncomeForm(true)} onEditExpense={handleEditExpense} />
       )}
       {currentView === 'settings' && <SettingsView />}
 
@@ -116,12 +138,15 @@ const AppContent = () => {
 
       {/* Expense Form Modal */}
       {showForm && (
-        <ExpenseForm 
-          expense={editingExpense} 
+        <ExpenseForm
+          expense={editingExpense}
           onClose={handleCloseForm}
           onNavigateToSettings={handleNavigateToSettings}
         />
       )}
+
+      {/* Income Form Modal */}
+      <IncomeForm isOpen={showIncomeForm} onClose={() => setShowIncomeForm(false)} />
     </Layout>
   );
 };

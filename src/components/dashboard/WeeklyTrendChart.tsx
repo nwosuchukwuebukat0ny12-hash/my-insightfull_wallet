@@ -10,7 +10,7 @@ export const WeeklyTrendChart = () => {
   // Get current week's days
   const now = new Date();
   const weekStart = startOfWeek(now, { weekStartsOn: 1 });
-  
+
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const date = addDays(weekStart, i);
     return {
@@ -26,9 +26,9 @@ export const WeeklyTrendChart = () => {
       const expenseDate = format(parseISO(expense.date), 'yyyy-MM-dd');
       return expenseDate === day.date;
     });
-    
+
     const total = dayExpenses.reduce((sum, e) => sum + e.amount, 0);
-    
+
     return {
       day: day.dayShort,
       amount: total,
@@ -72,7 +72,7 @@ export const WeeklyTrendChart = () => {
       <h3 className="text-lg font-semibold font-display mb-4">Weekly Trend</h3>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
@@ -88,6 +88,7 @@ export const WeeklyTrendChart = () => {
             <YAxis
               axisLine={false}
               tickLine={false}
+              width={50}
               tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
               tickFormatter={(value) => {
                 const currencyInfo = CURRENCIES.find(c => c.code === currency);

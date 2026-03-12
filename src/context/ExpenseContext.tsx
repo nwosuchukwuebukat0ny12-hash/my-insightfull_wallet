@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Expense, Budget, CategoryType, PaymentMethod } from '@/lib/types';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import { Expense, Budget, CategoryType, PaymentMethod, Income, IncomeSource } from '@/lib/types';
 import { CurrencyCode, DEFAULT_CURRENCY } from '@/lib/constants';
 import { getCurrency, saveCurrency } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,11 +8,14 @@ import { toast } from 'sonner';
 
 interface ExpenseContextType {
   expenses: Expense[];
+  income: Income[];
   budget: Budget | null;
   currency: CurrencyCode;
   addExpense: (expense: Omit<Expense, 'id' | 'createdAt'>) => Promise<void>;
   updateExpense: (id: string, updates: Partial<Expense>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
+  addIncome: (income: Omit<Income, 'id' | 'createdAt'>) => Promise<void>;
+  deleteIncome: (id: string) => Promise<void>;
   setBudget: (amount: number) => Promise<void>;
   setCurrency: (currency: CurrencyCode) => void;
   isLoading: boolean;
@@ -22,13 +25,14 @@ const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined);
 
 export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [income, setIncome] = useState<Income[]>([]);
   const [budget, setBudgetState] = useState<Budget | null>(null);
   const [currency, setCurrencyState] = useState<CurrencyCode>(DEFAULT_CURRENCY);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
   // Fetch expenses from database
-  const fetchExpenses = async () => {
+  const fetchExpenses = useCallback(async () => {
     if (!user) {
       setExpenses([]);
       return;
@@ -42,7 +46,12 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     if (error) {
       console.error('Error fetching expenses:', error);
-      toast.error('Failed to load expenses');
+
+      // Prevent infinite toasts if the table doesn't exist yet or RLS fails
+      if (error.code !== '42P01' && error.code !== 'PGRST116') {
+        toast.error('Failed to load expenses');
+      }
+      setExpenses([]);
       return;
     }
 
@@ -58,10 +67,10 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
     }));
 
     setExpenses(mappedExpenses);
-  };
+  }, [user]);
 
   // Fetch budget from database
-  const fetchBudget = async () => {
+  const fetchBudget = useCallback(async () => {
     if (!user) {
       setBudgetState(null);
       return;
@@ -78,6 +87,7 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     if (error) {
       console.error('Error fetching budget:', error);
+      setBudgetState(null);
       return;
     }
 
@@ -92,26 +102,62 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
     } else {
       setBudgetState(null);
     }
-  };
+  }, [user]);
+
+  // Fetch income from database
+  const fetchIncome = useCallback(async () => {
+    if (!user) {
+      setIncome([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('income')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching income:', error);
+      if (error.code !== '42P01' && error.code !== 'PGRST116') {
+        toast.error('Failed to load income');
+      }
+      setIncome([]);
+      return;
+    }
+
+    const mappedIncome: Income[] = (data || []).map((i) => ({
+      id: i.id,
+      name: i.name,
+      amount: Number(i.amount),
+      source: i.source as IncomeSource,
+      date: i.date,
+      note: i.note || undefined,
+      createdAt: i.created_at,
+    }));
+
+    setIncome(mappedIncome);
+  }, [user]);
 
   // Load data when user changes
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       setCurrencyState(getCurrency());
-      
+
       if (user) {
-        await Promise.all([fetchExpenses(), fetchBudget()]);
+        await Promise.all([fetchExpenses(), fetchBudget(), fetchIncome()]);
       } else {
         setExpenses([]);
+        setIncome([]);
         setBudgetState(null);
       }
-      
+
       setIsLoading(false);
     };
 
     loadData();
-  }, [user]);
+  }, [user, fetchExpenses, fetchBudget, fetchIncome]);
 
   const addExpenseHandler = async (expenseData: Omit<Expense, 'id' | 'createdAt'>) => {
     if (!user) {
@@ -243,25 +289,113 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
     toast.success('Budget updated');
   };
 
-  const setCurrencyHandler = (newCurrency: CurrencyCode) => {
+  // Wrap setCurrencyHandler in useCallback so it's stable for useMemo
+  const setCurrencyHandler = useCallback((newCurrency: CurrencyCode) => {
     setCurrencyState(newCurrency);
     saveCurrency(newCurrency);
+  }, []);
+
+  // Wrap add, update, delete, setBudget handlers in useCallback to keep context stable
+  const stableAddExpenseHandler = useCallback(addExpenseHandler, [user]);
+  const stableUpdateExpenseHandler = useCallback(updateExpenseHandler, [user]);
+  const stableDeleteExpenseHandler = useCallback(deleteExpenseHandler, [user]);
+  const stableSetBudgetHandler = useCallback(setBudgetHandler, [user]);
+
+  const addIncomeHandler = async (incomeData: Omit<Income, 'id' | 'createdAt'>) => {
+    if (!user) {
+      toast.error('You must be logged in to add income');
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('income')
+      .insert({
+        user_id: user.id,
+        name: incomeData.name,
+        amount: incomeData.amount,
+        source: incomeData.source,
+        date: incomeData.date,
+        note: incomeData.note || null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding income:', error);
+      toast.error('Failed to add income');
+      return;
+    }
+
+    const newIncome: Income = {
+      id: data.id,
+      name: data.name,
+      amount: Number(data.amount),
+      source: data.source as IncomeSource,
+      date: data.date,
+      note: data.note || undefined,
+      createdAt: data.created_at,
+    };
+
+    setIncome((prev) => [newIncome, ...prev]);
+    toast.success('Income added');
   };
 
+  const deleteIncomeHandler = async (id: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('income')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error deleting income:', error);
+      toast.error('Failed to delete income');
+      return;
+    }
+
+    setIncome((prev) => prev.filter((i) => i.id !== id));
+    toast.success('Income deleted');
+  };
+
+  const stableAddIncomeHandler = useCallback(addIncomeHandler, [user]);
+  const stableDeleteIncomeHandler = useCallback(deleteIncomeHandler, [user]);
+
+  // Memoize context value to prevent full app re-renders on internal state changes
+  const contextValue = useMemo(
+    () => ({
+      expenses,
+      income,
+      budget,
+      currency,
+      addExpense: stableAddExpenseHandler,
+      updateExpense: stableUpdateExpenseHandler,
+      deleteExpense: stableDeleteExpenseHandler,
+      addIncome: stableAddIncomeHandler,
+      deleteIncome: stableDeleteIncomeHandler,
+      setBudget: stableSetBudgetHandler,
+      setCurrency: setCurrencyHandler,
+      isLoading,
+    }),
+    [
+      expenses,
+      income,
+      budget,
+      currency,
+      isLoading,
+      stableAddExpenseHandler,
+      stableUpdateExpenseHandler,
+      stableDeleteExpenseHandler,
+      stableAddIncomeHandler,
+      stableDeleteIncomeHandler,
+      stableSetBudgetHandler,
+      setCurrencyHandler
+    ]
+  );
+
   return (
-    <ExpenseContext.Provider
-      value={{
-        expenses,
-        budget,
-        currency,
-        addExpense: addExpenseHandler,
-        updateExpense: updateExpenseHandler,
-        deleteExpense: deleteExpenseHandler,
-        setBudget: setBudgetHandler,
-        setCurrency: setCurrencyHandler,
-        isLoading,
-      }}
-    >
+    <ExpenseContext.Provider value={contextValue}>
       {children}
     </ExpenseContext.Provider>
   );

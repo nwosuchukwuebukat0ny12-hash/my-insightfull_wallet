@@ -11,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
 export const formatCurrency = (amount: number, currencyCode: CurrencyCode = 'USD'): string => {
   const currency = CURRENCIES.find((c) => c.code === currencyCode);
   const symbol = currency?.symbol || '$';
-  
+
   return `${symbol}${amount.toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -36,15 +36,25 @@ export const filterExpensesByPeriod = (
 ): Expense[] => {
   if (period === 'all') return expenses;
 
+  if (period === 'today') {
+    const todayStr = format(date, 'yyyy-MM-dd');
+    return expenses.filter(e => e.date.startsWith(todayStr));
+  }
+
+  if (period === 'month') {
+    const monthStr = format(date, 'yyyy-MM');
+    return expenses.filter(e => e.date.startsWith(monthStr));
+  }
+
+  // Fallback for week using precise interval checking, since weeks cross months
   const intervals: Record<string, { start: Date; end: Date }> = {
-    today: { start: startOfDay(date), end: endOfDay(date) },
     week: { start: startOfWeek(date, { weekStartsOn: 1 }), end: endOfWeek(date, { weekStartsOn: 1 }) },
-    month: { start: startOfMonth(date), end: endOfMonth(date) },
   };
 
   const interval = intervals[period];
-  
+
   return expenses.filter((expense) => {
+    // Only parse the date object for week filtering which requires complex bound checking
     const expenseDate = parseISO(expense.date);
     return isWithinInterval(expenseDate, interval);
   });

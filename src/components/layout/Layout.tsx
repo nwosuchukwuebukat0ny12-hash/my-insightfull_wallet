@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Wallet, LayoutDashboard, List, Settings, Menu, X } from 'lucide-react';
+import { Wallet, LayoutDashboard, List, Settings, Menu, X, Sun, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserMenu } from './UserMenu';
+import { useTheme } from '@/hooks/useTheme';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,6 +18,11 @@ const NAV_ITEMS = [
 
 export const Layout = ({ children, currentView, onViewChange }: LayoutProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -52,7 +58,16 @@ export const Layout = ({ children, currentView, onViewChange }: LayoutProps) => 
 
         {/* User Menu & Footer */}
         <div className="pt-4 border-t border-border space-y-4">
-          <UserMenu />
+          <div className="flex items-center justify-between px-3">
+            <UserMenu />
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              title={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {resolvedTheme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+          </div>
           <p className="text-xs text-muted-foreground text-center">
             Made with 💚 for your finances
           </p>
@@ -68,6 +83,12 @@ export const Layout = ({ children, currentView, onViewChange }: LayoutProps) => 
           <h1 className="font-display font-bold">SpendWise</h1>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          >
+            {resolvedTheme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
           <UserMenu />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
