@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { expenseSchema } from '@/lib/validations';
 
 interface ExpenseFormProps {
   expense?: Expense | null;
@@ -45,20 +46,19 @@ export const ExpenseForm = ({ expense, onClose, onNavigateToSettings }: ExpenseF
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const amount = parseFloat(formData.amount);
-    if (!formData.name.trim() || isNaN(amount) || amount <= 0) {
-      toast.error('Please fill in all required fields correctly.');
+    const validation = expenseSchema.safeParse({
+      ...formData,
+      name: formData.name.trim(),
+      note: formData.note.trim() || undefined,
+    });
+
+    if (!validation.success) {
+      const firstError = validation.error.errors[0].message;
+      toast.error(firstError);
       return;
     }
 
-    const expenseData = {
-      name: formData.name.trim(),
-      amount,
-      category: formData.category,
-      date: formData.date,
-      note: formData.note.trim() || undefined,
-      paymentMethod: formData.paymentMethod,
-    };
+    const expenseData = validation.data;
 
     if (isEditing && expense) {
       await updateExpense(expense.id, expenseData);

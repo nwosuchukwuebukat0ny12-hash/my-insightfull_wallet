@@ -29,21 +29,21 @@ export const formatDateShort = (dateString: string): string => {
 };
 
 // Filter expenses by time period
-export const filterExpensesByPeriod = (
-  expenses: Expense[],
+export const filterExpensesByPeriod = <T extends { date: string }>(
+  items: T[],
   period: 'today' | 'week' | 'month' | 'all',
   date: Date = new Date()
-): Expense[] => {
-  if (period === 'all') return expenses;
+): T[] => {
+  if (period === 'all') return items;
 
   if (period === 'today') {
     const todayStr = format(date, 'yyyy-MM-dd');
-    return expenses.filter(e => e.date.startsWith(todayStr));
+    return items.filter(e => e.date.startsWith(todayStr));
   }
 
   if (period === 'month') {
     const monthStr = format(date, 'yyyy-MM');
-    return expenses.filter(e => e.date.startsWith(monthStr));
+    return items.filter(e => e.date.startsWith(monthStr));
   }
 
   // Fallback for week using precise interval checking, since weeks cross months
@@ -53,10 +53,10 @@ export const filterExpensesByPeriod = (
 
   const interval = intervals[period];
 
-  return expenses.filter((expense) => {
+  return items.filter((item) => {
     // Only parse the date object for week filtering which requires complex bound checking
-    const expenseDate = parseISO(expense.date);
-    return isWithinInterval(expenseDate, interval);
+    const itemDate = parseISO(item.date);
+    return isWithinInterval(itemDate, interval);
   });
 };
 

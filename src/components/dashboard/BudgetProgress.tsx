@@ -1,7 +1,9 @@
 import { useExpenses } from '@/context/ExpenseContext';
 import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { CATEGORIES } from '@/lib/constants';
+import { CategoryType } from '@/lib/types';
 
 export const BudgetProgress = () => {
   const { expenses, budget, currency, setBudget } = useExpenses();
@@ -38,7 +40,43 @@ export const BudgetProgress = () => {
   };
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editAmount, setEditAmount] = useState(budgetAmount.toString());
+  const [categoryAmounts, setCategoryAmounts] = useState<Record<CategoryType, string>>(() => {
+    const initial = {} as Record<CategoryType, string>;
+    CATEGORIES.forEach(cat => {
+      initial[cat.id] = (budget?.categoryBudgets?.[cat.id] || 0).toString();
+    });
+    return initial;
+  });
+
+  // Update categoryAmounts when budget changes
+  useEffect(() => {
+    if (budget?.categoryBudgets) {
+      const initial = {} as Record<CategoryType, string>;
+      CATEGORIES.forEach(cat => {
+        initial[cat.id] = (budget.categoryBudgets?.[cat.id] || 0).toString();
+      });
+      setCategoryAmounts(initial);
+    }
+  }, [budget]);
+
+  const totalEditAmount = useMemo(() => {
+    return Object.values(categoryAmounts).reduce((sum, val) => {
+      const num = parseFloat(val);
+      return sum + (isNaN(num) ? 0 : num);
+    }, 0);
+  }, [categoryAmounts]);
+
+  const handleSave = () => {
+    const parsedCategoryBudgets = {} as Record<CategoryType, number>;
+    Object.entries(categoryAmounts).forEach(([cat, val]) => {
+      const num = parseFloat(val);
+      if (!isNaN(num) && num > 0) {
+        parsedCategoryBudgets[cat as CategoryType] = num;
+      }
+    });
+    setBudget(totalEditAmount, parsedCategoryBudgets);
+    setIsEditing(false);
+  };
 
   if (budgetAmount === 0 && !isEditing) {
     return (
@@ -66,7 +104,7 @@ export const BudgetProgress = () => {
     return (
       <div className="glass-card p-6 animate-slide-up stagger-1">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold font-display">Set Monthly Budget</h3>
+          <h3 className="text-lg font-semibold font-display">Set Category Budgets</h3>
           <button
             onClick={() => setIsEditing(false)}
             className="btn-ghost text-sm text-muted-foreground hover:text-foreground"
@@ -74,45 +112,41 @@ export const BudgetProgress = () => {
             Cancel
           </button>
         </div>
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                {currency}
-              </span>
-              <input
-                type="number"
-                min="0"
-                step="10"
-                value={editAmount}
-                onChange={(e) => setEditAmount(e.target.value)}
-                className="input-field pl-8 w-full"
-                placeholder="0.00"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    const amount = parseFloat(editAmount);
-                    if (!isNaN(amount) && amount >= 0) {
-                      setBudget(amount);
-                      setIsEditing(false);
-                    }
-                  }
-                }}
-              />
+        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+          {CATEGORIES.map((cat) => (
+            <div key={cat.id} className="flex items-center gap-3">
+              <div className="flex items-center gap-2 w-32">
+                <span className="text-xl">{cat.icon}</span>
+                <span className="text-sm font-medium">{cat.name}</span>
+              </div>
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  {currency}
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  step="10"
+                  value={categoryAmounts[cat.id]}
+                  onChange={(e) => setCategoryAmounts(prev => ({ ...prev, [cat.id]: e.target.value }))}
+                  className="input-field pl-12 w-full text-sm"
+                  placeholder="0.00"
+                />
+              </div>
             </div>
-            <button
-              onClick={() => {
-                const amount = parseFloat(editAmount);
-                if (!isNaN(amount) && amount >= 0) {
-                  setBudget(amount);
-                  setIsEditing(false);
-                }
-              }}
-              className="btn-primary whitespace-nowrap"
-            >
-              Save
-            </button>
+          ))}
+        </div>
+        <div className="mt-6 pt-4 border-t flex items-center justify-between">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Total Monthly Budget</p>
+            <p className="text-lg font-bold">{formatCurrency(totalEditAmount, currency)}</p>
           </div>
+          <button
+            onClick={handleSave}
+            className="btn-primary px-8"
+          >
+            Save
+          </button>
         </div>
       </div>
     );
@@ -124,7 +158,6 @@ export const BudgetProgress = () => {
         <h3 className="text-lg font-semibold font-display">Monthly Budget</h3>
         <button
           onClick={() => {
-            setEditAmount(budgetAmount.toString());
             setIsEditing(true);
           }}
           className="btn-ghost text-sm"
@@ -139,10 +172,13 @@ export const BudgetProgress = () => {
             <p className="text-sm text-muted-foreground">Spent</p>
             <p className="text-2xl font-bold font-display">{formatCurrency(totalSpent, currency)}</p>
           </div>
-
+          <div className="text-right">
+            <p className="text-sm text-muted-foreground">Budget</p>
+            <p className="text-lg font-semibold">{formatCurrency(budgetAmount, currency)}</p>
+          </div>
         </div>
 
-        <div className="budget-progress">
+        <div className="budget-progress h-3 mb-6">
           <div
             className={cn('h-full rounded-full transition-all duration-700 ease-out', getProgressColor())}
             style={{
@@ -155,18 +191,18 @@ export const BudgetProgress = () => {
             }}
           />
         </div>
-      </div>
 
-      <p
-        className={cn(
-          'text-sm font-medium',
-          isOverBudget && 'text-destructive',
-          isNearLimit && 'text-warning',
-          !isOverBudget && !isNearLimit && 'text-muted-foreground'
-        )}
-      >
-        {getMessage()}
-      </p>
+        <p
+          className={cn(
+            'text-sm font-medium mb-2',
+            isOverBudget && 'text-destructive',
+            isNearLimit && 'text-warning',
+            !isOverBudget && !isNearLimit && 'text-muted-foreground'
+          )}
+        >
+          {getMessage()}
+        </p>
+      </div>
     </div>
   );
 };

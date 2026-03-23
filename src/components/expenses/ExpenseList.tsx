@@ -45,7 +45,7 @@ export const ExpenseList = ({ onEditExpense }: ExpenseListProps) => {
 
   // Filter income
   const filteredIncome = useMemo(() => {
-    let result = filterExpensesByPeriod(income as any, timeFilter) as unknown as Income[];
+    let result = filterExpensesByPeriod(income, timeFilter);
 
     if (debouncedSearchQuery.trim()) {
       const query = debouncedSearchQuery.toLowerCase();

@@ -16,7 +16,7 @@ interface ExpenseContextType {
   deleteExpense: (id: string) => Promise<void>;
   addIncome: (income: Omit<Income, 'id' | 'createdAt'>) => Promise<void>;
   deleteIncome: (id: string) => Promise<void>;
-  setBudget: (amount: number) => Promise<void>;
+  setBudget: (amount: number, categoryBudgets?: Record<CategoryType, number>) => Promise<void>;
   setCurrency: (currency: CurrencyCode) => void;
   isLoading: boolean;
 }
@@ -250,7 +250,7 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
     toast.success('Expense deleted');
   };
 
-  const setBudgetHandler = async (amount: number) => {
+  const setBudgetHandler = async (amount: number, categoryBudgets?: Record<CategoryType, number>) => {
     if (!user) {
       toast.error('You must be logged in to set a budget');
       return;
@@ -268,6 +268,7 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
           amount,
           month,
           year,
+          category_budgets: categoryBudgets || null,
         },
         { onConflict: 'user_id,month,year' }
       )
@@ -285,6 +286,7 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
       amount: Number(data.amount),
       month: data.month,
       year: data.year,
+      categoryBudgets: data.category_budgets as Record<CategoryType, number> | undefined,
     });
     toast.success('Budget updated');
   };

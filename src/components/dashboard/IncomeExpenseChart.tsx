@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, TooltipProps } from 'recharts';
 import { useExpenses } from '@/context/ExpenseContext';
 import { formatCurrency, filterExpensesByPeriod } from '@/lib/utils';
 import { CURRENCIES } from '@/lib/constants';
@@ -55,14 +55,14 @@ export const IncomeExpenseChart = () => {
     );
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
       return (
         <div className="glass-card p-3 border border-border/50">
           <p className="text-sm text-muted-foreground mb-1">{label}</p>
-          {payload.map((entry: any, i: number) => (
+          {payload.map((entry, i) => (
             <p key={i} className="font-bold" style={{ color: entry.color }}>
-              {entry.name}: {formatCurrency(entry.value, currency)}
+              {entry.name}: {formatCurrency(entry.value as number, currency)}
             </p>
           ))}
         </div>

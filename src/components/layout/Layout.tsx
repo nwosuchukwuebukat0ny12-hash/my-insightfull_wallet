@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { Wallet, LayoutDashboard, List, Settings, Menu, X, Sun, Moon } from 'lucide-react';
+import { Wallet, LayoutDashboard, List, Settings, Menu, X, Sun, Moon, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserMenu } from './UserMenu';
 import { useTheme } from '@/hooks/useTheme';
 
 interface LayoutProps {
   children: React.ReactNode;
-  currentView: 'dashboard' | 'expenses' | 'settings';
-  onViewChange: (view: 'dashboard' | 'expenses' | 'settings') => void;
+  currentView: 'dashboard' | 'expenses' | 'settings' | 'reports';
+  onViewChange: (view: 'dashboard' | 'expenses' | 'settings' | 'reports') => void;
 }
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'reports', label: 'Reports', icon: BarChart3 },
   { id: 'expenses', label: 'Expenses', icon: List },
   { id: 'settings', label: 'Settings', icon: Settings },
 ] as const;

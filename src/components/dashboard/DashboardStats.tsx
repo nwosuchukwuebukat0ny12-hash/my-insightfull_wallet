@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, Wallet, Calendar, PiggyBank, DollarSign } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, PiggyBank, DollarSign, Target } from 'lucide-react';
 import { useExpenses } from '@/context/ExpenseContext';
 import { formatCurrency, filterExpensesByPeriod, calculateTotal, getPreviousMonthSpending, calculateChangePercentage } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -69,10 +69,8 @@ export const DashboardStats = () => {
   const { expenses, income, budget, currency } = useExpenses();
 
   const monthExpenses = filterExpensesByPeriod(expenses, 'month');
-  const todayExpenses = filterExpensesByPeriod(expenses, 'today');
   
   const totalThisMonth = calculateTotal(monthExpenses);
-  const todaySpending = calculateTotal(todayExpenses);
   const previousMonthTotal = getPreviousMonthSpending(expenses);
   
   const changePercentage = calculateChangePercentage(totalThisMonth, previousMonthTotal);
@@ -88,6 +86,7 @@ export const DashboardStats = () => {
   });
   const totalIncomeThisMonth = monthIncome.reduce((sum, i) => sum + i.amount, 0);
   const netBalance = totalIncomeThisMonth - totalThisMonth;
+  const unallocatedFunds = totalIncomeThisMonth - (budget?.amount || 0);
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -101,10 +100,12 @@ export const DashboardStats = () => {
         className="stagger-1"
       />
       <StatCard
-        title="Today"
-        value={formatCurrency(todaySpending, currency)}
-        icon={Calendar}
-        variant="default"
+        title="Unallocated Funds"
+        value={formatCurrency(Math.abs(unallocatedFunds), currency)}
+        icon={Target}
+        trend={unallocatedFunds >= 0 ? 'down' : 'up'}
+        trendValue={unallocatedFunds >= 0 ? "Surplus" : "Deficit"}
+        variant={unallocatedFunds >= 0 ? 'default' : 'warning'}
         className="stagger-2"
       />
       <StatCard

@@ -3,6 +3,8 @@ import { X } from 'lucide-react';
 import { useExpenses } from '@/context/ExpenseContext';
 import { INCOME_SOURCES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import { incomeSchema } from '@/lib/validations';
+import { toast } from 'sonner';
 
 interface IncomeFormProps {
   isOpen: boolean;
@@ -30,18 +32,27 @@ export const IncomeForm = ({ isOpen, onClose }: IncomeFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !amount || parseFloat(amount) <= 0) return;
     const finalSource = source === 'other' && customSource.trim() ? customSource.trim() : source;
+
+    const validation = incomeSchema.safeParse({
+      name: name.trim(),
+      amount,
+      source: finalSource,
+      date,
+      note: note.trim() || undefined,
+    });
+
+    if (!validation.success) {
+      const firstError = validation.error.errors[0].message;
+      toast.error(firstError);
+      return;
+    }
+
+    const incomeData = validation.data;
 
     setIsSubmitting(true);
     try {
-      await addIncome({
-        name: name.trim(),
-        amount: parseFloat(amount),
-        source: finalSource as any,
-        date,
-        note: note.trim() || undefined,
-      });
+      await addIncome(incomeData);
       resetForm();
       onClose();
     } finally {

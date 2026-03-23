@@ -40,10 +40,10 @@ export const ProfileSettings = () => {
 
       // Trigger a page reload to refresh the profile data
       window.location.reload();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Update Failed",
-        description: error.message || "Failed to update profile.",
+        description: error instanceof Error ? error.message : "Failed to update profile.",
         variant: "destructive",
       });
     } finally {

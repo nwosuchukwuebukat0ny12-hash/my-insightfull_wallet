@@ -13,10 +13,11 @@ import { ExpenseList } from '@/components/expenses/ExpenseList';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
 import { IncomeForm } from '@/components/income/IncomeForm';
 import { SettingsView } from '@/components/settings/SettingsView';
+import { ReportsView } from '@/components/reports/ReportsView';
 import { Expense } from '@/lib/types';
 import { format } from 'date-fns';
 
-type ViewType = 'dashboard' | 'expenses' | 'settings';
+type ViewType = 'dashboard' | 'expenses' | 'settings' | 'reports';
 
 const DashboardView = ({ onAddExpense, onAddIncome }: { onAddExpense: () => void; onAddIncome: () => void }) => {
   const currentMonth = format(new Date(), 'MMMM yyyy');
@@ -124,17 +125,11 @@ const AppContent = () => {
   return (
     <Layout currentView={currentView} onViewChange={setCurrentView}>
       {currentView === 'dashboard' && <DashboardView onAddExpense={handleAddExpense} onAddIncome={() => setShowIncomeForm(true)} />}
+      {currentView === 'reports' && <ReportsView />}
       {currentView === 'expenses' && (
         <ExpensesView onAddExpense={handleAddExpense} onAddIncome={() => setShowIncomeForm(true)} onEditExpense={handleEditExpense} />
       )}
       {currentView === 'settings' && <SettingsView />}
-
-      {/* Floating Action Button - Mobile */}
-      {currentView !== 'settings' && (
-        <button onClick={handleAddExpense} className="fab-button lg:hidden">
-          <Plus className="w-6 h-6" />
-        </button>
-      )}
 
       {/* Expense Form Modal */}
       {showForm && (
